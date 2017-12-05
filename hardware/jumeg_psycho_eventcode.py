@@ -43,31 +43,13 @@ class JuMEG_Psycho_EventCode(object):
                         'test_seq_code'      : '211,1000,255,128,64,32,16,8,4,2,1,2048,1024,512,256'
                        }
 
-             
-          #self.ComPort      = port 
-          #self.baudrate     = baudrate
           self.__serial     = None
           self.__byte_array_size = 7
           self.verbose      = False
           
           self.__isConnected= False
          
-         # self.__COMAND_CODE_SWITCH_ON  = 111
-         # self.__COMAND_CODE_SWITCH_OFF = 112
-         # self.__COMAND_CODE_SEND_SEQ   = 211 # sending eventcode seq 
-          
-         # self.__SEND_BYTE_CODE = True
-         # self.__VENDOR_ID_CODE = 123 # identify arduino microcontroller eventcode generator
-         # self.__VENDOR_ID_CODE_ARRAY = bytearray([123,123,123,123,123,123,123] ) # identify arduino microcontroller eventcode generator
-         # self.__VENDOR_PORT_STRING   = '/dev/ttyACM[0-9]*'
-          
-        #  self.duration_ms = duration_ms
-        #  self.startcode   = startcode
-
-        # self.find_arduino_port()
-
-          #self.open()
-      
+            
       def __str__(self):
           return "Arduino is on port %s at %d baudrate" %(self.ComPort,self.serial.baudrate)
 
