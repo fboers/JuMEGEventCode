@@ -18,7 +18,7 @@ except:
     from hardware.jumeg_psycho_eventcode       import JuMEG_Psycho_EventCode
     from wxutils.jumeg_psycho_wxutils_controls import JuMEG_wxControlButtons,JuMEG_wxControls,JuMEG_wxControlCheckButtons
 
-__version__='2017-08-17.001'
+__version__='2018-02-22.001'
 
 class JuMEG_wxPsychoEventCode(wx.Panel):
   
@@ -70,6 +70,18 @@ class JuMEG_wxPsychoEventCode(wx.Panel):
         self.OPT = JuMEG_wxControls(self,label="Options",  control_list=self.option_list)
         
         self.CKB = JuMEG_wxControlCheckButtons(self,label="Flags",control_list=self.flag_list)  
+      
+      #--- click on radio button andsend this bit    
+        bit_list = ['','D0','D1','D2','D3','D4','D5','D6','D7']
+        self.pnl_rgb_trigger = wx.Panel(self,style=wx.SUNKEN_BORDER) 
+        self.RB_TRIGGER      = wx.RadioBox(self.pnl_rgb_trigger,label = 'SEND Trigger   Bit',choices = bit_list ,majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+        self.RB_TRIGGER.Bind(wx.EVT_RADIOBOX,self.ClickOnRBTrigger)
+        self.RB_TRIGGER.SetSelection(0)
+      #--- 
+        self.pnl_rgb_eventcode = wx.Panel(self,style=wx.SUNKEN_BORDER)
+        self.RB_EVENTCODE      = wx.RadioBox(self.pnl_rgb_eventcode,label = 'SEND EventCode Bit',choices = bit_list ,majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+        self.RB_EVENTCODE.Bind(wx.EVT_RADIOBOX,self.ClickOnRBEventcode)
+        self.RB_EVENTCODE.SetSelection(0)
         
       #---ComPort buttons Open/Close & Update
         self.pnl_bt_comport  = wx.Panel(self.COM,style=wx.SUNKEN_BORDER)
@@ -94,12 +106,33 @@ class JuMEG_wxPsychoEventCode(wx.Panel):
         self.BtSendCMD.Bind(wx.EVT_BUTTON,self.ClickOnSendCMD,id=self.BtSendCMD.GetId())
         self.TxtSendCMD = wx.TextCtrl(self.pnl_bt_send,wx.NewId() )   
         self.TxtSendCMD.SetValue('211,1000,255,128,64,32,16,8,4,2,1,2048,1024,512,256')
-               
-        self.__ApplyLayout()   
         
-    def ClickOnSendCode(self,evt=None): 
+        self.__ApplyLayout()   
+  
+    def ClickOnRBEventcode(self,evt=None): 
+        if self.RB_EVENTCODE.GetSelection() > 0:
+           code = 2**(self.RB_EVENTCODE.GetSelection()-1)
+        else:
+           code = 0 
+        print" ---> send EventCode bit: "+ self.RB_EVENTCODE.GetStringSelection() +" -> %d" %(2**self.RB_EVENTCODE.GetSelection())
+        self.ClickOnSendCode( code=2**self.RB_EVENTCODE.GetSelection() )
+        
+    def ClickOnRBTrigger(self,evt=None):
+        if self.RB_TRIGGER.GetSelection() > 0:
+           code = 2**(self.RB_TRIGGER.GetSelection() +8-1)
+        else:
+           code = 0 
+        print" ---> send TriggerCode bit: "+ self.RB_TRIGGER.GetStringSelection() +" -> %d" %(code)
+        self.ClickOnSendCode( code = code )
+        
+    def ClickOnSendCode(self,evt=None,code=None): 
         if self.EventCode.isConnected:
-           if evt.GetEventObject().GetLabel().startswith('Start'):
+          
+           if code:
+              self.EventCode.sendEventCode(code)
+              print"Done send: %d" % (code)
+              print
+           elif evt.GetEventObject().GetLabel().startswith('Start'):
               self.EventCode.sendStartCode()
            elif evt.GetEventObject().GetLabel().startswith('Stop'):
               self.EventCode.sendStopCode()
@@ -239,6 +272,11 @@ class JuMEG_wxPsychoEventCode(wx.Panel):
         vbox2.Add(self.OPT,0, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
         vbox2.Add(self.CKB,0, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
         
+        vbox2.Add(wx.StaticText(self.pnl_rgb_eventcode,0,label='Event Code Bits'),0,wx.LEFT,ds)
+        vbox2.Add(self.pnl_rgb_eventcode,0, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
+        vbox2.Add(wx.StaticText(self.pnl_rgb_trigger,0,label='Trigger Code Bits'),0,wx.LEFT,ds)
+        vbox2.Add(self.pnl_rgb_trigger,0, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
+                
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(vbox1,1, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
         hbox.Add(vbox2,1, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
@@ -248,7 +286,9 @@ class JuMEG_wxPsychoEventCode(wx.Panel):
         vbox3.Add(self.pnl_bt_send,0, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL,ds)
         
         self.SetSizer(vbox3)      
-
+   
+   
+           
 class JuMEG_wxPsychoEventCodeFrame(wx.Frame):
   
     def __init__(self,*kargs, **kwargs):
@@ -256,17 +296,62 @@ class JuMEG_wxPsychoEventCodeFrame(wx.Frame):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(JuMEG_wxPsychoEventCode(self),1, wx.ALIGN_LEFT|wx.EXPAND|wx.ALL, 5)
         #self.SetAutoLayout(True)
-        #self.SetSizer(vbox)      
+        #self.SetSizer(vbox) 
+        self.InitUI()
         self.SetSizerAndFit(vbox)
 
         self.Show(True)  
+      
+        
+    def InitUI(self):    
+        menubar = wx.MenuBar()
+        MyMenuIO  = wx.Menu()
+        Mexit   = MyMenuIO.Append(wx.ID_EXIT, 'Close', 'Close application')
+        
+        MyMenuInfo = wx.Menu()
+        Mabout  = MyMenuInfo.Append(wx.ID_ABOUT, 'About', 'About application')
+        self.Bind(wx.EVT_MENU, self.ClickOnClose, Mexit)
+        self.Bind(wx.EVT_MENU, self.ShowAbout, Mabout)
+        
+        menubar.Append(MyMenuIO,  '&Close')
+        menubar.Append(MyMenuInfo,'&Info')
+        
+        self.SetMenuBar(menubar)
+        self.Show(True)
+        
+    def ShowAbout(self,evt):
+        """
+        modified from : http://http://zetc ode.com/wxpython/dialogs/
+        :return:
+        """
 
+        description="Event Code Generator for Arduino MEGA"
+        
+        info = wx.AboutDialogInfo()
+
+        info.SetName('JuMEG EventCode Generator INM4-MEG-FZJ')
+        info.SetVersion( __version__ )
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2017 - 2018 Frank Boers')
+        info.SetWebSite('https://github.com/fboers/JuMEGEventCode')
+        info.AddDeveloper('Frank Boers')
+        info.AddDocWriter('Frank Boers')
+        info.AddArtist('JuMEG')
+        wx.AboutBox(info) 
+    
+    def ClickOnClose(self,evt):
+        dlg = wx.MessageDialog(self, 'Are you sure to quit?', 'Question', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        if (dlg.ShowModal() == wx.ID_YES):
+            self.Close(True)
+   
+    
+    
 if __name__ == '__main__':
    
-    app = wx.App()
-    frame = JuMEG_wxPsychoEventCodeFrame(None,-1,style=wx.DEFAULT_FRAME_STYLE|wx.FULL_REPAINT_ON_RESIZE)
+   app = wx.App()
+   frame = JuMEG_wxPsychoEventCodeFrame(None,-1,style=wx.DEFAULT_FRAME_STYLE|wx.FULL_REPAINT_ON_RESIZE)
     
-    frame.Show()
-    app.MainLoop()
+   frame.Show()
+   app.MainLoop()
 
 
