@@ -65,12 +65,12 @@ char data_buffer[122] = {};
 #define BAUDRATE 115200
 #define TIMER5_INTERVALL_US 200
 #define SEQ_MAX_DATA_COUNTS 122
-#define PIN_START_CODE 4 
 
 #define START_CODE 128
 #define START_CODE_DURATION_MS 200;
 
-#define PIN_STATUS 5  // switch on LED during sending event/trigger code
+#define PIN_START_CODE 4 // pin connected to front panel button to send event start code (eg.128)
+#define PIN_STATUS 5     // switch on LED during sending event/trigger code
 
 bool startcode_isOn=false;
 
@@ -152,6 +152,7 @@ class EventCode{
        
        _time_end    = (unsigned long) micros() + duration * 1000;
        isOn         = true;
+       digitalWrite(PIN_STATUS,HIGH);
        //Serial.print("-> ON: ");
        //Serial.println(code);
    }// end of SwitchOn
@@ -169,6 +170,7 @@ class EventCode{
      _portTRIGGER_CODE = clear_code ;  // set trigger code/bits
      _time_end         = 0;
      isOn              = false; 
+     digitalWrite(PIN_STATUS,LOW);
     // Serial.println("OFF");
    } // end of SwitchOff
 
@@ -246,7 +248,7 @@ public:
      _portTRIGGER_CODE = clear_code ;  // set trigger code/bits
      _time_end         = 0;
      isOn              = false; 
-     data_counts    = 0;
+     data_counts       = 0;
      data_index        = 0;
      digitalWrite(PIN_STATUS,LOW);
     // Serial.println("OFF");

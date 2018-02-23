@@ -112,18 +112,14 @@ class JuMEG_wxPsychoEventCode(wx.Panel):
     def ClickOnRBEventcode(self,evt=None): 
         if self.RB_EVENTCODE.GetSelection() > 0:
            code = 2**(self.RB_EVENTCODE.GetSelection()-1)
-        else:
-           code = 0 
-        print" ---> send EventCode bit: "+ self.RB_EVENTCODE.GetStringSelection() +" -> %d" %(2**self.RB_EVENTCODE.GetSelection())
-        self.ClickOnSendCode( code=2**self.RB_EVENTCODE.GetSelection() )
+           print" ---> send EventCode bit: "+ self.RB_EVENTCODE.GetStringSelection() +" -> %d" %(code)
+           self.ClickOnSendCode( code=code )
         
     def ClickOnRBTrigger(self,evt=None):
         if self.RB_TRIGGER.GetSelection() > 0:
            code = 2**(self.RB_TRIGGER.GetSelection() +8-1)
-        else:
-           code = 0 
-        print" ---> send TriggerCode bit: "+ self.RB_TRIGGER.GetStringSelection() +" -> %d" %(code)
-        self.ClickOnSendCode( code = code )
+           print" ---> send TriggerCode bit: "+ self.RB_TRIGGER.GetStringSelection() +" -> %d" %(code)
+           self.ClickOnSendCode( code = code )
         
     def ClickOnSendCode(self,evt=None,code=None): 
         if self.EventCode.isConnected:
