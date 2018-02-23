@@ -1,20 +1,26 @@
 /*---------------------------------------------
- * Arduino MEGA 
- * sending event eventcode TTL signals
+ * JuMEG Eventcode
+ * sending eventcodes (TTL signals) as digital markers to MEG/EEG system
+ * using  Arduino MEGA 
  * --------------------------------------------
  * @author   F.Boers (f.boers@fz-juelich.de)
  * FZJ-INM4-MEG
  * --- v1.00  05.2017
  * update 19.08.2017  
- * * --- v1.01  19.10.2017
+ * --- v1.01  19.10.2017
  * update 05.12.2017 
  * add button for sending startcode manually
+ * --- v1.02 23.02.2018
+ * update 23.02.2018 
+ * bug fixes
  *---------------------------------------------
- * TTL Output 
+ * TTL Output 16bit
+ * 4D MEG system first  8bit labeld as eventcode 0-255
+ * 4D MEG system second 8bit labeld as triggercode 256 - X00FF
  * eventcode 0-255 
- * ---> Port A1-8  Pin 33,34,35,36,37,38,39,40
- * triggercode 256,512,1024 
- * --->Port C12-14 Pin 22,23,24,25 
+ * ---> Port C0-7  Pin 37,36,35,34,33,32,31,30
+ * triggercode 256 -X00FF 
+ * --->Port A Pin 22,23,24,25,26,27,28,29 
  *  
  * dependencies:
  * Timer5 and micros()
@@ -23,7 +29,7 @@
  *----------------------------------------------
  *  Start Code Button
  *  use Pin 4 
- *  conncet +5V with Button -->Button--> Pin4 and 10k-> GRND
+ *  conncet +5V via Button --> Pin4 and 10k-> GRND
  *----------------------------------------------
 * example:
   switch-on eventcode for limited time:
@@ -32,7 +38,7 @@
   
   -> present TTL eventcode 255+256 for 1024 ms
      111,255,1,0,3,0,0  
-  -> present eventcode "forever" arduino is running or recived switch-off commnad
+  -> present eventcode "forever" arduino is running or recived different switch on/off commnad
      111,255,2,0,b0,b1,b2,b3
    
   switch-off eventcode
@@ -52,10 +58,6 @@
  *--------------------------------------------- 
 */
   
-// unsigned long crc_python = 0;
-// for(uint8_t i=0;i<4;i++){        
-// crc_python |= ((long) Serial.read() << (i*8));
-//}
 
 char data_buffer[122] = {};      
 
